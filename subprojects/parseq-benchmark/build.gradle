@@ -1,11 +1,12 @@
-description = """Set of benchmarks for ParSeq"""
+ext {
+  description = """Set of benchmarks for ParSeq"""
+}
 
 dependencies {
     compile group: 'org.hdrhistogram', name: 'HdrHistogram', version:'2.1.8'
     compile group: 'org.slf4j', name: 'slf4j-simple', version:'1.7.12'
     compile project(":parseq-batching")
 }
-
 
 task fatJar(type: Jar) {
   classifier = 'jar-with-dependencies'
@@ -14,7 +15,7 @@ task fatJar(type: Jar) {
   manifest {
     attributes("Created-By": "Gradle",
         "Version": version,
-        "Built-By": sonatypeUsername,
+        "Built-By": project.rootProject.ext.builtByUser,
         "Build-JDK": JavaVersion.current())
     attributes 'Main-Class': 'com.linkedin.parseq.PerfLarge'
   }
@@ -25,26 +26,6 @@ task executeJava(type: JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
 }
 
-
-
 artifacts {
   archives fatJar
-}
-
-uploadArchives {
-  repositories {
-    mavenDeployer {
-      pom.project {
-        description description
-
-        developers {
-          developer {
-            id 'jodzga'
-            name 'Jaroslaw Odzga'
-            email 'jodzga@linkedin.com'
-          }
-        }
-      }
-    }
-  }
 }
