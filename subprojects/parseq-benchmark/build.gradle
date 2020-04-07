@@ -9,6 +9,7 @@ dependencies {
 }
 
 task fatJar(type: Jar) {
+  mustRunAfter ':parseq:jar' // for some reason, gradle can't figure out this transitive dependency
   classifier = 'jar-with-dependencies'
   from { configurations.compile.collect { it.isDirectory()? it : zipTree(it) } }
   with jar

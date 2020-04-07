@@ -19,6 +19,8 @@ allprojects { // for all projects including the root project
   apply plugin: 'eclipse'
   apply plugin: 'maven-publish'
   apply plugin: 'maven'
+  // TODO: remove this once we no longer need ivy publications (adds the "signatures" .ivy configuration)
+  apply plugin: 'signing'
 
   version = rootProject.version
 
@@ -38,6 +40,7 @@ idea {
 subprojects {
   if (!it.name.equals("parseq-tracevis")) {
     apply plugin: 'java'
+    apply plugin: 'java-library'
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
@@ -138,5 +141,18 @@ task runTracevisServer (dependsOn:':parseq-tracevis-server:build') {
   }
 }
 
-apply from: 'gradle/maven.gradle'
-apply from: 'gradle/bintray.gradle'
+subprojects { p ->
+  if (!p.name.endsWith('examples')) {
+    p.afterEvaluate {
+      p.apply from: "$rootDir/gradle/maven.gradle"
+    }
+    p.apply from: "$rootDir/gradle/bintray.gradle"
+  }
+}
+
+// TODO: remove once ivy publications are no longer required
+// Clean the project's local ivy repo before publishing to prevent conflicts
+project.tasks.uploadArchives.doFirst {
+  logger.lifecycle "Cleaning local ivy repo: $rootDir/build/ivy-repo"
+  delete(file("$rootDir/build/ivy-repo"))
+}

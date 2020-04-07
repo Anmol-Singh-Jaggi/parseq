@@ -15,83 +15,83 @@
  */
 
 /**
- * The purpose of this script is to configure the following tasks for a sub-project:
+ * The purpose of this script is to configure the following tasks for a given sub-project:
  * - generatePomFileForReleasePublication: generates the "release" Maven publication (.pom), needed for bintrayUpload
  * - publishReleasePublicationToMavenLocal: publishes the "release" publication to Maven local
  *
- * These are configured after the sub-projects are evaluated to ensure that sub-project archives have been configured
- * and extra properties have been set.
+ * This script should be applied after sub-projects are evaluated to ensure that sub-project archives have been
+ * configured and extra properties have been set.
  */
-subprojects {
-  afterEvaluate {
-    if (project.name.startsWith('parseq') && !project.name.endsWith('examples')) {
-      apply plugin: 'java-library'
+final boolean isJavaPublication = !project.name.equals('parseq-tracevis')
 
-      final boolean isJavaPublication = !project.name.equals('parseq-tracevis')
-
-      def pomConfig = {
-        name project.name // sub-project name
-        if (isJavaPublication) {
-          packaging 'jar'
-        }
-        url 'http://github.com/linkedin/parseq'
-        scm {
-          url 'git@github.com:linkedin/parseq.git'
-          connection 'scm:git:git@github.com:linkedin/parseq.git'
-          developerConnection 'scm:git:git@github.com:linkedin/parseq.git'
-        }
-        licenses {
-          license {
-            name 'The Apache Software License, Version 2.0'
-            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-            distribution 'repo'
-          }
-        }
-        developers {
-          // Add developers common to all sub-projects
-          developer {
-            id 'jodzga'
-            name 'Jaroslaw Odzga'
-            email 'jodzga@linkedin.com'
-          }
-          // Add developers specific to this sub-project
-          if (project.ext.has('developers')) {
-            project.ext.developers.forEach { info ->
-              developer {
-                id info.id
-                name info.name
-                email info.email
-              }
-            }
-          }
-        }
-      }
-
-      publishing {
-        publications {
-          release(MavenPublication) {
-            if (isJavaPublication) {
-              from components.java
-              // Add all extra archives (sources, javadoc, any custom archives e.g. jar-with-dependencies)
-              configurations.archives.allArtifacts.forEach {
-                if (it.classifier) {
-                  artifact it
-                }
-              }
-            } else {
-              artifact makeDist
-            }
-            groupId project.group
-            artifactId project.name // sub-project name
-            version project.version
-            pom.withXml {
-              def root = asNode()
-              root.appendNode('description', project.ext.description)
-              root.children().last() + pomConfig
-            }
-          }
+def pomConfig = {
+  name project.name // sub-project name
+  if (isJavaPublication) {
+    packaging 'jar'
+  }
+  url 'http://github.com/linkedin/parseq'
+  scm {
+    url 'git@github.com:linkedin/parseq.git'
+    connection 'scm:git:git@github.com:linkedin/parseq.git'
+    developerConnection 'scm:git:git@github.com:linkedin/parseq.git'
+  }
+  licenses {
+    license {
+      name 'The Apache Software License, Version 2.0'
+      url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+      distribution 'repo'
+    }
+  }
+  developers {
+    // Add developers common to all sub-projects
+    developer {
+      id 'jodzga'
+      name 'Jaroslaw Odzga'
+      email 'jodzga@linkedin.com'
+    }
+    // Add developers specific to this sub-project
+    if (project.ext.has('developers')) {
+      project.ext.developers.forEach { info ->
+        developer {
+          id info.id
+          name info.name
+          email info.email
         }
       }
     }
+  }
+}
+
+publishing {
+  publications {
+    release(MavenPublication) {
+      if (isJavaPublication) {
+        from components.java
+        // Add all extra archives (sources, javadoc, any custom archives e.g. jar-with-dependencies)
+        project.configurations.archives.allArtifacts.forEach {
+          if (it.classifier) {
+            artifact it
+          }
+        }
+      } else {
+        artifact makeDist
+      }
+      groupId project.group
+      artifactId project.name // sub-project name
+      version project.version
+      pom.withXml {
+        def root = asNode()
+        root.appendNode('description', project.ext.description)
+        root.children().last() + pomConfig
+      }
+    }
+  }
+}
+
+// TODO: remove once ivy publications are no longer required
+// Publish to project's local ivy repo
+uploadArchives {
+  repositories {
+    ivy { url "file:$rootDir/build/ivy-repo" }
   }
 }

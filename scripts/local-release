@@ -20,7 +20,7 @@ fi
 VERSION=$(awk 'BEGIN { FS = "=" }; $1 == "version" { print $2 }' gradle.properties | awk '{ print $1 }')
 echo "Publishing parseq $VERSION to ${LOCAL_REPO}..."
 
-./gradlew -i --console=plain -Dmaven.repo.local=$LOCAL_REPO -Prelease publishReleasePublicationToMavenLocal
+./gradlew -Dmaven.repo.local=$LOCAL_REPO -Prelease publishReleasePublicationToMavenLocal
 
 if [ $? -eq 0 ]; then
   echo "Published parseq $VERSION to $LOCAL_REPO"
